@@ -6,11 +6,16 @@ import random
 import numpy as np
 import json
 import pickle
+import argparse
 
-# Serialize data into file:
+parser = argparse.ArgumentParser()
+parser.add_argument('--save', action='store', dest='filesave', help='name of the file that will be created')
+parser.add_argument('--train', action='store', dest='train', help='name of the training dataset file')
+parser.add_argument('--ngram', action='store', dest='ngram', help='The size of the ngram model to train')
+parser.add_argument('--load', action='store', dest='fileload', help='loads the model')
+parser.add_argument('--print', action='store', dest='headlines', help='print a specific amount of generated headlines')
 
-# Read data from file:
-
+args = parser.parse_args()
 
 class Model():
 
@@ -84,11 +89,21 @@ class Model():
         
         return " ".join(phrase).replace('BOS', '').replace('EOS', '')
 
-filename = 'abcnews-date-text.csv'
+if args.train:
+    if not args.ngram:
+        raise ValueError("The value of the ngram must be passed")
 
-model = Model(3)
-model.train(filename, 2000000)
-model.save("trigram")
-print(model.generate())
+    model = Model(int(args.ngram))
+    model.train(args.train, 2000000)
 
+if args.filesave:
+    model.save(args.filesave)
+
+if args.fileload:
+    model = Model(3)
+    model.load(args.fileload)
+
+if args.headlines:
+    for i in range(int(args.headlines)):
+        print(model.generate())
     
