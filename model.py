@@ -7,6 +7,7 @@ import numpy as np
 import json
 import pickle
 import argparse
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--save', action='store', dest='filesave', help='name of the file that will be created')
@@ -15,6 +16,7 @@ parser.add_argument('--ngram', action='store', dest='ngram', help='The size of t
 parser.add_argument('--load', action='store', dest='fileload', help='loads the model')
 parser.add_argument('--print', action='store', dest='headlines', help='print a specific amount of generated headlines')
 parser.add_argument('--manual', action='store_true', dest='manual', help='program will prompt for input to start a headline')
+parser.add_argument('--clear-cache', action='store_true', dest='clear_cache', help='removes all saved models')
 
 args = parser.parse_args()
 
@@ -130,5 +132,13 @@ if args.headlines:
 
 if args.manual:
     while True:
-        print(model.generate(input('Enter a begging of a headline: ').lower()))
+        start = input('Enter a begging of a headline: ').lower()
+        if start == 'quit' or start == 'exit':
+            break
+        print(model.generate(start))
+
+if args.clear_cache:
+    for name in os.listdir("."):
+        if name.endswith(".pkl"):
+            os.remove(name)
     
