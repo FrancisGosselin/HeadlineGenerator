@@ -50,3 +50,10 @@ Enter a begging of a headline: south park
 Enter a begging of a headline: quit
 ```
 
+### Removing models
+
+Models can take a lot of space so you should consider removing them after usage :
+
+        python3 model.py --clear-cache
+
+
