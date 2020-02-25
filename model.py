@@ -110,7 +110,11 @@ class Model():
                 if rand_number <= counter: 
                     phrase.append(word)
                     break
+            
             if phrase[-1] == 'EOS':
+                if i < 5:
+                    phrase.pop()
+                    continue
                 break
         
         return " ".join(phrase).replace('BOS', '').replace('EOS', '')
