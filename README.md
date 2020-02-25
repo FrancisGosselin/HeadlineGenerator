@@ -49,6 +49,12 @@ Enter a begging of a headline: south park
  south park in armadale police handling of torres strait ferries back bank boss 
 Enter a begging of a headline: quit
 ```
+### Training ngrams > 4
+If you train a ngram of 5 or more, it may crash because it takes too much space. To fix this just impose a limit on the training dataset.
+
+Train a 5-gram model with only 60% of the training dataset:
+
+        python3 model.py --train ./abcnews-date-text.csv  --ngram 5 --save fivegram --cap 60
 
 ### Removing models
 
