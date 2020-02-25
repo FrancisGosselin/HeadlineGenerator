@@ -17,6 +17,10 @@ parser.add_argument('--print', action='store', dest='headlines', help='print a s
 
 args = parser.parse_args()
 
+def progress_bar(percentage, length):
+    load_progress = '#'*int(percentage/100*length) + '-'*(length - int(percentage/100*length))
+    return "\r[%s]  %i%% trained" % (load_progress, percentage)
+
 class Model():
 
     vocabulary = set()
@@ -49,7 +53,8 @@ class Model():
 
             for index, row in chunk.iterrows():
                 if (index %10000 == 0):
-                    print(index/chunk.size*200, "% trained")
+                    sys.stdout.write(progress_bar(index/chunk.size*200, 30))
+                    sys.stdout.flush()
 
                 tokens = re.findall(tokenizer, row['headline_text'])
                 tokens = ['BOS'] + tokens + ['EOS']
@@ -64,8 +69,11 @@ class Model():
                             self.occurence_table[tuple(tokens[i-self.cntxt_size:i])][word] = 0
                         self.occurence_table[tuple(tokens[i-self.cntxt_size:i])][word] += 1
 
+            sys.stdout.write(progress_bar(100, 30))
+            sys.stdout.flush()
             break
         print("")
+        print("Training Done!")
     def generate(self):
         while True:
             phrase = list(random.choice(list(self.occurence_table.keys())))
