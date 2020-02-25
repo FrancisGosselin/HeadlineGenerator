@@ -15,6 +15,7 @@ parser.add_argument('--train', action='store', dest='train', help='name of the t
 parser.add_argument('--ngram', action='store', dest='ngram', help='The size of the ngram model to train')
 parser.add_argument('--load', action='store', dest='fileload', help='loads the model')
 parser.add_argument('--print', action='store', dest='headlines', help='print a specific amount of generated headlines')
+parser.add_argument('--cap', action='store', dest='cap_value', help='A cap on the porportion of data to train on (default 100%)')
 parser.add_argument('--manual', action='store_true', dest='manual', help='program will prompt for input to start a headline')
 parser.add_argument('--clear-cache', action='store_true', dest='clear_cache', help='removes all saved models')
 
@@ -37,7 +38,7 @@ class Model():
         with open(filename + '.pkl', 'rb') as f:
             data =  pickle.load(f)
             self.occurence_table = data["occurence_table"]
-            self.vocabulary = data["vocabulary"]
+            self.vocabulary = set(dict(data["vocabulary"]).keys())
             self.ngram = data["ngram"]
 
     def save(self, file):
@@ -47,10 +48,12 @@ class Model():
         with open( file + '.pkl', 'wb') as f:
             pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
-    def train(self, filename, maxrows):
+    def train(self, filename, cap_percentage):
 
+        with open(filename) as f:
+            nlines = sum(1 for line in f)
 
-        for chunk in pd.read_csv(filename, chunksize=maxrows):
+        for chunk in pd.read_csv(filename, chunksize=int(nlines*cap_percentage)):
 
             for index, row in chunk.iterrows():
                 if (index %10000 == 0):
@@ -58,8 +61,6 @@ class Model():
                     sys.stdout.flush()
 
                 self.__processline__(row['headline_text'])
-
-                
 
             sys.stdout.write(progress_bar(100, 30))
             sys.stdout.flush()
@@ -72,16 +73,19 @@ class Model():
         tokens = re.findall(self.tokenizer, line)
         tokens = ['BOS'] + tokens + ['EOS']
 
-        for i, word in enumerate(tokens):
-            if word not in self.vocabulary :
-                self.vocabulary.add(word)
-            if i > 0:
-                for cntxt_size in range(1, min(i, self.ngram - 1) + 1):
-                    if tuple(tokens[i-cntxt_size:i]) not in self.occurence_table:
-                        self.occurence_table[tuple(tokens[i-cntxt_size:i])] = dict({})
-                    if word not in self.occurence_table[tuple(tokens[i-cntxt_size:i])]:
-                        self.occurence_table[tuple(tokens[i-cntxt_size:i])][word] = 0
-                    self.occurence_table[tuple(tokens[i-cntxt_size:i])][word] += 1
+        try :
+            for i, word in enumerate(tokens):
+                if word not in self.vocabulary :
+                    self.vocabulary.add(word)
+                if i > 0:
+                    for cntxt_size in range(1, min(i, self.ngram - 1) + 1):
+                        if tuple(tokens[i-cntxt_size:i]) not in self.occurence_table:
+                            self.occurence_table[tuple(tokens[i-cntxt_size:i])] = dict({})
+                        if word not in self.occurence_table[tuple(tokens[i-cntxt_size:i])]:
+                            self.occurence_table[tuple(tokens[i-cntxt_size:i])][word] = 0
+                        self.occurence_table[tuple(tokens[i-cntxt_size:i])][word] += 1
+        except MemoryError:
+            print('ERROR! The model takes too much space, etheir lower the value of the ngram (--ngram [2-4]) \n\tor train on a portion of the data (--)')
 
     def generate(self, start = ''):
         phrase = re.findall(self.tokenizer, start)
@@ -94,7 +98,8 @@ class Model():
                     cntxt_table = self.occurence_table[tuple(phrase[i-cntxt_size:i])]
             
             if not cntxt_table:
-                phrase.append(random.choice(list(self.vocabulary())))
+                phrase.append(random.choice(list(self.vocabulary)))
+                continue
             
             total = sum(cntxt_table.values())
             rand_number = random.randint(0, total - 1)
@@ -115,7 +120,7 @@ if args.train:
         raise ValueError("The value of the ngram must be passed")
 
     model = Model(int(args.ngram))
-    model.train(args.train, 2000000)
+    model.train(args.train, float(args.cap_value)/100.0)
 
 if args.filesave:
     print('Saving model...')
