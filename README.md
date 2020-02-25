@@ -2,7 +2,8 @@
 Language modeling with n-gram model. The data used to train the model is from Kaggle: https://www.kaggle.com/therohk/million-headlines.
 
 ## Requierements
-python3, pip3, and pandas
+python3, pip3, and pandas:
+
     pip3 install pandas
 
 ## Usage
