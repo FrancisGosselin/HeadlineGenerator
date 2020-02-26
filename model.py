@@ -15,7 +15,7 @@ parser.add_argument('--train', action='store', dest='train', help='name of the t
 parser.add_argument('--ngram', action='store', dest='ngram', help='The size of the ngram model to train')
 parser.add_argument('--load', action='store', dest='fileload', help='loads the model')
 parser.add_argument('--print', action='store', dest='headlines', help='print a specific amount of generated headlines')
-parser.add_argument('--cap', action='store', dest='cap_value', help='A cap on the porportion of data to train on (default 100%)')
+parser.add_argument('--cap', action='store', default=100, dest='cap_value', help='A cap on the porportion of data to train on (default 100%)')
 parser.add_argument('--manual', action='store_true', dest='manual', help='program will prompt for input to start a headline')
 parser.add_argument('--clear-cache', action='store_true', dest='clear_cache', help='removes all saved models')
 
